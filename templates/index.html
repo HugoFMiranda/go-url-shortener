@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h1 { text-align: center; margin-bottom: 30px; }
+        .nav {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            transition: background 0.3s ease;
+        }
+        .nav a:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        input[type="url"] {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(5px);
+        }
+        input[type="url"]::placeholder { color: rgba(255, 255, 255, 0.7); }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover { background: rgba(255, 255, 255, 0.3); }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: none;
+        }
+        .short-url {
+            word-break: break-all;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .copy-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 URL Shortener</h1>
+        <div class="nav">
+            <a href="/">Home</a>
+            <a href="/dashboard">Dashboard</a>
+        </div>
+        <form id="urlForm">
+            <div class="form-group">
+                <input 
+                    type="url" 
+                    id="urlInput" 
+                    placeholder="Enter your long URL here..." 
+                    required
+                >
+            </div>
+            <button type="submit">Shorten URL</button>
+        </form>
+        
+        <div id="result" class="result">
+            <h3>Your shortened URL:</h3>
+            <div id="shortUrl" class="short-url"></div>
+            <button id="copyBtn" class="copy-btn">Copy to Clipboard</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('urlForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const url = document.getElementById('urlInput').value;
+            const button = e.target.querySelector('button');
+            
+            button.textContent = 'Shortening...';
+            button.disabled = true;
+            
+            try {
+                const response = await fetch('/api/shorten', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('shortUrl').textContent = 'http://' + data.short_url;
+                    document.getElementById('result').style.display = 'block';
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Network error: ' + error.message);
+            }
+            
+            button.textContent = 'Shorten URL';
+            button.disabled = false;
+        });
+        
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const shortUrl = document.getElementById('shortUrl').textContent;
+            navigator.clipboard.writeText(shortUrl).then(() => {
+                const btn = document.getElementById('copyBtn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy to Clipboard', 2000);
+            });
+        });
+    </script>
+</body>
+</html>
